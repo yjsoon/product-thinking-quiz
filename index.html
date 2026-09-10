@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product Thinking</title>
+<meta name="description" content="A single-statement page introducing product thinking: who is this for, and what breaks if it never ships?">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><text y=%2226%22 font-size=%2226%22>%E2%9C%B3</text></svg>">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body { margin: 0; font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --ground: #E6E4DB;
+    --ground-2: #DDDBD1;
+    --grid-minor: rgba(25, 30, 26, 0.055);
+    --grid-major: rgba(25, 30, 26, 0.10);
+    --ink: #191E1B;
+    --ink-soft: #565C55;
+    --accent: #B23A22;
+    --rule: rgba(25, 30, 26, 0.18);
+    --focus: #2C5A7A;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F1315;
+      --ground-2: #0B0E10;
+      --grid-minor: rgba(233, 231, 222, 0.055);
+      --grid-major: rgba(233, 231, 222, 0.10);
+      --ink: #EDEAE1;
+      --ink-soft: #969D96;
+      --accent: #FF7A55;
+      --rule: rgba(237, 234, 225, 0.20);
+      --focus: #8FC3E0;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F1315;
+    --ground-2: #0B0E10;
+    --grid-minor: rgba(233, 231, 222, 0.055);
+    --grid-major: rgba(233, 231, 222, 0.10);
+    --ink: #EDEAE1;
+    --ink-soft: #969D96;
+    --accent: #FF7A55;
+    --rule: rgba(237, 234, 225, 0.20);
+    --focus: #8FC3E0;
+  }
+
+  body {
+    min-height: 100vh;
+    background-color: var(--ground);
+    background-image:
+      linear-gradient(var(--grid-major) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+      linear-gradient(var(--grid-minor) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px),
+      radial-gradient(120% 90% at 15% 0%, transparent 40%, var(--ground-2) 100%);
+    background-size: 152px 152px, 152px 152px, 19px 19px, 19px 19px, 100% 100%;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 1080px;
+    margin-inline: auto;
+    padding-inline: clamp(20px, 6vw, 96px);
+    padding-block: clamp(72px, 16vh, 160px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(28px, 4.5vw, 48px);
+  }
+
+  .mark {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  .mark::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+
+  .mark b {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: Fraunces, "Iowan Old Style", Georgia, serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 0, "WONK" 1;
+    font-weight: 400;
+    font-size: clamp(3.3rem, 13.2vw, 9.2rem);
+    line-height: 0.88;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  h1 .line {
+    display: block;
+  }
+
+  h1 .thin {
+    font-weight: 300;
+    font-style: italic;
+    color: var(--ink-soft);
+    letter-spacing: -0.015em;
+  }
+
+  .tagline {
+    margin: 0;
+    max-width: 46ch;
+    font-size: clamp(0.95rem, 1.05rem + 0.2vw, 1.18rem);
+    line-height: 1.72;
+    color: var(--ink);
+  }
+
+  .tagline .quiet {
+    color: var(--ink-soft);
+  }
+
+  .scribble {
+    position: relative;
+    white-space: nowrap;
+  }
+
+  .scribble svg {
+    position: absolute;
+    left: -2px;
+    right: -2px;
+    bottom: -0.42em;
+    width: calc(100% + 4px);
+    height: 0.5em;
+    overflow: visible;
+  }
+
+  .scribble path {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  @media (max-width: 560px) {
+    .scribble {
+      white-space: normal;
+      box-shadow: inset 0 -2px 0 var(--accent);
+    }
+    .scribble svg { display: none; }
+  }
+
+  /* One orchestrated load: rule, title lines, tagline, then the ink stroke. */
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(0.36em); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  @keyframes draw {
+    from { stroke-dashoffset: 320; }
+    to   { stroke-dashoffset: 0; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .mark, h1 .line, .tagline, .go {
+      animation: rise 720ms cubic-bezier(0.22, 0.72, 0.3, 1) backwards;
+    }
+    .go { animation-delay: 520ms; }
+    .mark { animation-delay: 40ms; }
+    h1 .line:nth-of-type(1) { animation-delay: 130ms; }
+    h1 .line:nth-of-type(2) { animation-delay: 230ms; }
+    .tagline { animation-delay: 380ms; }
+    .scribble path {
+      stroke-dasharray: 320;
+      animation: draw 900ms cubic-bezier(0.4, 0, 0.2, 1) 900ms backwards;
+    }
+  }
+
+  .go {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    align-self: start;
+    padding: 12px 22px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--ground);
+    background: var(--ink);
+    border: 1px solid var(--ink);
+    transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
+  }
+
+  .go:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <p class="mark"><b>&#10033;</b> a working discipline</p>
+
+  <h1>
+    <span class="line">Product</span>
+    <span class="line thin">Thinking</span>
+  </h1>
+
+  <p class="tagline">
+    Before the roadmap, before the spec, before a single ticket &mdash; two questions:
+    who is this for, and <span class="scribble">what breaks if it never ships<svg viewBox="0 0 300 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8.4C48 3.6 96 9.2 148 5.4c46-3.4 96 3.6 150 1.2"></path></svg></span>?
+    <span class="quiet">Everything after that is engineering.</span>
+  </p>
+
+  <a class="go" href="quiz.html">Take the quiz &rarr;</a>
+</main>
+</body>
+</html>
