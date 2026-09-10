@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flappy Product</title>
+<meta name="description" content="A flappy-bird run through the IDG Product Thinking pathway: every gate offers the product-thinking move or the tempting shortcut.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..800;1,9..144,300..600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><text y=%2226%22 font-size=%2226%22>%E2%9C%B3</text></svg>">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body { margin: 0; }
+  [hidden] { display: none !important; }
+
+  :root {
+    --ground: #E6E4DB;
+    --ground-2: #DDDBD1;
+    --card: #F1EFE8;
+    --grid-minor: rgba(25, 30, 26, 0.055);
+    --grid-major: rgba(25, 30, 26, 0.10);
+    --ink: #191E1B;
+    --ink-soft: #565C55;
+    --ink-faint: #8A9088;
+    --accent: #B23A22;
+    --good: #2C6A4A;
+    --rule: rgba(25, 30, 26, 0.16);
+    --rule-strong: rgba(25, 30, 26, 0.34);
+    --wall: #C9C5B8;
+    --focus: #2C5A7A;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0F1315; --ground-2: #0B0E10; --card: #171C1F;
+      --grid-minor: rgba(233, 231, 222, 0.055);
+      --grid-major: rgba(233, 231, 222, 0.10);
+      --ink: #EDEAE1; --ink-soft: #969D96; --ink-faint: #6E7672;
+      --accent: #FF7A55; --good: #74C79B;
+      --rule: rgba(237, 234, 225, 0.18);
+      --rule-strong: rgba(237, 234, 225, 0.40);
+      --wall: #262D31;
+      --focus: #8FC3E0;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F1315; --ground-2: #0B0E10; --card: #171C1F;
+    --grid-minor: rgba(233, 231, 222, 0.055);
+    --grid-major: rgba(233, 231, 222, 0.10);
+    --ink: #EDEAE1; --ink-soft: #969D96; --ink-faint: #6E7672;
+    --accent: #FF7A55; --good: #74C79B;
+    --rule: rgba(237, 234, 225, 0.18);
+    --rule-strong: rgba(237, 234, 225, 0.40);
+    --wall: #262D31;
+    --focus: #8FC3E0;
+  }
+
+  body {
+    min-height: 100vh;
+    background-color: var(--ground);
+    background-image:
+      linear-gradient(var(--grid-major) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+      linear-gradient(var(--grid-minor) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px),
+      radial-gradient(120% 90% at 15% 0%, transparent 40%, var(--ground-2) 100%);
+    background-size: 152px 152px, 152px 152px, 19px 19px, 19px 19px, 100% 100%;
+    background-attachment: fixed;
+    color: var(--ink);
+    font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 940px;
+    margin-inline: auto;
+    padding-inline: clamp(16px, 4vw, 40px);
+    padding-block: clamp(32px, 6vh, 64px);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .eyebrow {
+    display: flex; align-items: center; gap: 12px; margin: 0 0 12px;
+    font-size: 0.7rem; font-weight: 500; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-soft);
+  }
+  .eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+  .eyebrow b { color: var(--accent); font-weight: 500; }
+
+  h1 {
+    margin: 0;
+    font-family: Fraunces, "Iowan Old Style", Georgia, serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 0, "WONK" 1;
+    font-weight: 400;
+    font-size: clamp(2.4rem, 8vw, 4rem);
+    line-height: 0.92; letter-spacing: -0.025em; text-wrap: balance;
+  }
+  h1 em { font-style: italic; font-weight: 300; color: var(--ink-soft); }
+
+  .standfirst { margin: 0; max-width: 62ch; color: var(--ink-soft); }
+
+  .hud {
+    display: flex; flex-wrap: wrap; gap: 8px 26px; align-items: baseline;
+    padding-bottom: 12px; border-bottom: 1px solid var(--rule);
+    font-size: 0.72rem; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .hud .val { color: var(--ink); font-variant-numeric: tabular-nums; letter-spacing: 0.06em; }
+  .hud .budget { color: var(--accent); letter-spacing: 0.2em; }
+  .hud .budget .spent { color: var(--ink-faint); }
+
+  .stage { position: relative; }
+  canvas {
+    display: block; width: 100%; height: auto;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    touch-action: none;
+    cursor: pointer;
+  }
+
+  .overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+    gap: 14px; padding: clamp(18px, 5vw, 44px);
+    background: var(--card);
+  }
+  .overlay h2 {
+    margin: 0;
+    font-family: Fraunces, Georgia, serif;
+    font-variation-settings: "SOFT" 0, "WONK" 1;
+    font-weight: 400; font-size: clamp(1.5rem, 5.2vw, 2.5rem);
+    line-height: 1.05; letter-spacing: -0.02em; text-wrap: balance;
+  }
+  .overlay p { margin: 0; max-width: 54ch; color: var(--ink-soft); font-size: 0.92rem; }
+  .overlay .missed {
+    display: flex; flex-direction: column; gap: 7px;
+    width: 100%; overflow-y: auto; padding-right: 6px;
+    font-size: 0.8rem; line-height: 1.5;
+  }
+  .overlay .missed div { color: var(--ink-soft); }
+  .overlay .missed b { color: var(--ink); font-weight: 500; }
+  .overlay .missed i { color: var(--accent); font-style: normal; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 11px 22px; font: inherit; font-weight: 500; letter-spacing: 0.06em;
+    color: var(--ground); background: var(--ink); border: 1px solid var(--ink);
+    cursor: pointer; text-decoration: none;
+    transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+  .btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.ghost { color: var(--ink); background: transparent; border-color: var(--rule-strong); }
+  .btn.ghost:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+  .lesson {
+    display: flex; flex-direction: column; gap: 8px;
+    min-height: 116px;
+    padding: 16px 20px;
+    background: var(--card);
+    border-left: 3px solid var(--rule-strong);
+  }
+  .lesson[data-tone="right"] { border-left-color: var(--good); }
+  .lesson[data-tone="wrong"] { border-left-color: var(--accent); }
+  .lesson .tag {
+    margin: 0; font-size: 0.68rem; font-weight: 500;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint);
+  }
+  .lesson[data-tone="right"] .tag { color: var(--good); }
+  .lesson[data-tone="wrong"] .tag { color: var(--accent); }
+  .lesson .text { margin: 0; max-width: 72ch; }
+
+  .footer {
+    display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between;
+    padding-top: 18px; border-top: 1px solid var(--rule);
+    font-size: 0.72rem; color: var(--ink-faint);
+  }
+  .footer a { color: var(--ink-soft); text-underline-offset: 3px; }
+  .footer a:hover { color: var(--accent); }
+
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+
+  @media (max-width: 460px) {
+    .btn { width: 100%; justify-content: center; }
+    .overlay { gap: 10px; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <header>
+    <p class="eyebrow"><b>&#10033;</b> 13 gates &middot; 3 budget &middot; one pathway</p>
+    <h1>Flappy <em>Product</em></h1>
+  </header>
+
+  <p class="standfirst">
+    Every gate has two openings: the product-thinking move, and the shortcut that feels faster.
+    They look identical from the air &mdash; read the labels before you commit.
+  </p>
+
+  <div class="hud">
+    <span>Gate <span class="val" id="gateNum">1</span> / 13</span>
+    <span>Cleared <span class="val" id="score">0</span></span>
+    <span>Budget <span class="val budget" id="budget">&#9679;&#9679;&#9679;</span></span>
+    <span>Best <span class="val" id="best">0</span></span>
+  </div>
+
+  <div class="stage">
+    <canvas id="c" aria-label="Flappy Product: a side-scrolling game about product thinking. Press space to flap."></canvas>
+    <div class="overlay" id="overlay">
+      <h2 id="ovTitle">Ship something. Carefully.</h2>
+      <p id="ovBody">Space, click or tap to flap. Steer through the opening that reflects product thinking &mdash; the wrong one costs a budget dot, and hitting the wall costs one too.</p>
+      <div class="missed" id="ovMissed" hidden></div>
+      <div class="row">
+        <button type="button" class="btn" id="startBtn">Start the run</button>
+        <a class="btn ghost" href="quiz.html">Take the quiz &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="lesson" id="lesson" data-tone="idle">
+    <p class="tag" id="lessonTag">Waiting at the gate</p>
+    <p class="text" id="lessonText">Each gate is a real decision from the IDG Product Thinking pathway. Fly through one and you will find out which habit you just picked.</p>
+  </div>
+
+  <footer class="footer">
+    <span>Gates drawn from idg.gov.sg &mdash; Product Thinking, modules 1&ndash;7</span>
+    <a href="index.html">&larr; Back to the intro</a>
+  </footer>
+
+</main>
+
+<script>
+/* Every gate is a real decision from the pathway: the habit, and the shortcut. */
+var GATES = [
+  { module: "Module 1 · Problems before solutions",
+    right: "Diagnose the problem", wrong: "We need more AI",
+    okWhy: "Great digital products start with problems, not solutions. The technology comes after the diagnosis.",
+    noWhy: "“We need a CRM” and “we need more AI” are solutions wearing a problem’s clothes. Most failed projects start here." },
+  { module: "Module 1 · Scope",
+    right: "Start with taxis", wrong: "Launch the full vision",
+    okWhy: "Grab began with taxis, Amazon with books, Netflix with DVDs — one core problem solved, then scaled.",
+    noWhy: "None of them launched their whole vision on day one. Narrow the first problem, not the ambition." },
+  { module: "Module 3 · Five Whys",
+    right: "Ask why five times", wrong: "Patch the symptom",
+    okWhy: "The Five Whys is the tool that moves you from symptom to cause.",
+    noWhy: "You just treated a symptom. It comes back next quarter wearing a different ticket number." },
+  { module: "Module 3 · Choosing the level to fix",
+    right: "A cause you control", wrong: "The deepest cause",
+    okWhy: "Problems rarely have one root cause. Pick one within your control and closely connected to the outcome you want to change.",
+    noWhy: "Deepest is not most useful. Follow the chain far enough and you land on national demographics you cannot fix." },
+  { module: "Module 2 · The 4Cs: Confirmation",
+    right: "68% said so", wrong: "Users seem annoyed",
+    okWhy: "Confirmation is the evidence that the problem is real and correctly understood — data or user feedback.",
+    noWhy: "“Seems” is a hunch. A 4Cs problem statement has to be data-backed before any build begins." },
+  { module: "Module 4 · Outputs vs outcomes",
+    right: "12 days to 3 days", wrong: "Shipped 4 features",
+    okWhy: "Define success by the change achieved, not the features delivered.",
+    noWhy: "Four features is an output. Nobody outside the team can tell whether anything actually got better." },
+  { module: "Module 4 · Leading and lagging",
+    right: "Leading + lagging", wrong: "Total logins",
+    okWhy: "Leading indicators give early feedback; lagging indicators measure the real outcome. They work as a chain.",
+    noWhy: "Logins measure activity, and activity climbs whether or not you helped anyone." },
+  { module: "Module 4 · SMART",
+    right: "+20% by March", wrong: "Improve it soon",
+    okWhy: "Specific, Measurable, Achievable, Relevant, Time-bound — you can tell whether you hit it.",
+    noWhy: "“Improve” names no measure and “soon” no date. You could never fail it, which is the problem." },
+  { module: "Module 4 · Value-Cost Ratio",
+    right: "Value per dollar", wrong: "Spend the budget",
+    okWhy: "VCR measures how much value is generated for every dollar spent — the case for the next round of funding.",
+    noWhy: "Budget burned is a cost. It tells a funder nothing about what the money bought." },
+  { module: "Module 5 · Market risk",
+    right: "FormSG + a sheet", wrong: "Build the full system",
+    okWhy: "The health booking pilot ran on a form feeding a spreadsheet: 0 bookings in control, 24 in treatment. Market risk bought down for almost nothing.",
+    noWhy: "That is a full build before anyone proved users want it — the most expensive way to find out." },
+  { module: "Module 5 · Staged delivery",
+    right: "Concept, then value", wrong: "Scale on day one",
+    okWhy: "Proof of Concept, Proof of Value, Scale, Maturity. Feasibility before demand before size.",
+    noWhy: "Scaling something unproven multiplies the mistake, and does it in production." },
+  { module: "Module 6 · Compulsory services",
+    right: "Design it anyway", wrong: "It’s compulsory",
+    okWhy: "Experience matters more when a service is mandatory, because citizens do not have the option to go elsewhere.",
+    noWhy: "Mandatory usage is not proof of a good experience. That usage chart is a captive audience." },
+  { module: "Module 6 · The 11-star framework",
+    right: "Aim for 11 stars", wrong: "Good enough",
+    okWhy: "Describe the absurdly good version, then work back. Somewhere between adequate and impossible sits the experience worth building.",
+    noWhy: "Adequate is where ambition quietly stops. The 11-star exercise exists to reset it." }
+];
+
+var canvas = document.getElementById("c");
+var ctx = canvas.getContext("2d");
+var overlay = document.getElementById("overlay");
+var ovTitle = document.getElementById("ovTitle");
+var ovBody = document.getElementById("ovBody");
+var ovMissed = document.getElementById("ovMissed");
+var startBtn = document.getElementById("startBtn");
+var scoreEl = document.getElementById("score");
+var gateEl = document.getElementById("gateNum");
+var budgetEl = document.getElementById("budget");
+var bestEl = document.getElementById("best");
+var lesson = document.getElementById("lesson");
+var lessonTag = document.getElementById("lessonTag");
+var lessonText = document.getElementById("lessonText");
+
+var H = 520;
+var W = 900;
+var WALL_W = 58;
+var GAP_H = 118;
+var BIRD_R = 11;
+
+var state = "ready";
+var bird, walls, queue, gateIndex, score, budget, speed, missed, flashT, invuln;
+var best = 0;
+
+try { best = parseInt(localStorage.getItem("flappy-product-best") || "0", 10) || 0; } catch (e) { best = 0; }
+
+var C = {};
+function readColors() {
+  var s = getComputedStyle(document.documentElement);
+  C = {
+    ink: s.getPropertyValue("--ink").trim(),
+    faint: s.getPropertyValue("--ink-faint").trim(),
+    accent: s.getPropertyValue("--accent").trim(),
+    wall: s.getPropertyValue("--wall").trim(),
+    rule: s.getPropertyValue("--rule").trim(),
+    card: s.getPropertyValue("--card").trim()
+  };
+}
+
+function resize() {
+  var cssW = Math.max(320, canvas.parentElement.clientWidth);
+  W = cssW;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.style.height = H + "px";
+  canvas.width = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (bird) bird.x = W * 0.26;
+  readColors();
+  draw();
+}
+
+function shuffled(arr) {
+  var a = arr.slice(), i, j, t;
+  for (i = a.length - 1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1));
+    t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function makeWall(gate, x) {
+  var margin = 40;
+  var half = (H - margin * 2) / 2;
+  var topCentre = margin + GAP_H / 2 + Math.random() * (half - GAP_H);
+  var botCentre = margin + half + GAP_H / 2 + Math.random() * (half - GAP_H);
+  var rightOnTop = Math.random() < 0.5;
+  return {
+    x: x, gate: gate, scored: false,
+    top: { y: topCentre, label: rightOnTop ? gate.right : gate.wrong, correct: rightOnTop },
+    bot: { y: botCentre, label: rightOnTop ? gate.wrong : gate.right, correct: !rightOnTop }
+  };
+}
+
+function reset() {
+  queue = shuffled(GATES);
+  gateIndex = 0;
+  score = 0;
+  budget = 3;
+  speed = 2.5;
+  missed = [];
+  flashT = 0;
+  invuln = 0;
+  bird = { x: W * 0.26, y: H / 2, v: 0 };
+  walls = [makeWall(queue[0], W + 60)];
+  updateHud();
+}
+
+function updateHud() {
+  scoreEl.textContent = score;
+  gateEl.textContent = Math.min(gateIndex + 1, GATES.length);
+  budgetEl.innerHTML = new Array(budget + 1).join("●") +
+    '<span class="spent">' + new Array(4 - budget).join("○") + "</span>";
+  bestEl.textContent = best;
+}
+
+function setLesson(tone, tag, text) {
+  lesson.dataset.tone = tone;
+  lessonTag.textContent = tag;
+  lessonText.textContent = text;
+}
+
+var last = 0;
+function frame(t) {
+  var dt = Math.min((t - last) / 16.667, 2.2) || 1;
+  last = t;
+  if (state === "flying") step(dt);
+  draw();
+  requestAnimationFrame(frame);
+}
+
+function step(dt) {
+  bird.v = Math.min(bird.v + 0.42 * dt, 11);
+  bird.y += bird.v * dt;
+  if (flashT > 0) flashT -= dt;
+  if (invuln > 0) invuln -= dt;
+
+  var i;
+  for (i = 0; i < walls.length; i++) walls[i].x -= speed * dt;
+
+  if (bird.y - BIRD_R < 0) { bird.y = BIRD_R; bird.v = 0; }
+  if (bird.y + BIRD_R > H) {
+    crash("You flew into the ground. Altitude is a resource too — spend it more slowly.");
+    return;
+  }
+
+  for (i = 0; i < walls.length; i++) {
+    var wall = walls[i];
+    if (invuln <= 0 && bird.x + BIRD_R > wall.x && bird.x - BIRD_R < wall.x + WALL_W) {
+      var inTop = Math.abs(bird.y - wall.top.y) < GAP_H / 2 - BIRD_R + 3;
+      var inBot = Math.abs(bird.y - wall.bot.y) < GAP_H / 2 - BIRD_R + 3;
+      if (!inTop && !inBot) {
+        crash("You hit the wall between the two options. Not deciding is also a decision, and it costs the same.");
+        return;
+      }
+    }
+  }
+
+  var w = walls[0];
+  if (!w) return;
+
+  if (!w.scored && bird.x - BIRD_R > w.x + WALL_W) {
+    w.scored = true;
+    var throughTop = Math.abs(bird.y - w.top.y) < Math.abs(bird.y - w.bot.y);
+    var chosen = throughTop ? w.top : w.bot;
+    if (chosen.correct) {
+      score++;
+      setLesson("right", w.gate.module + " — “" + chosen.label + "”", w.gate.okWhy);
+    } else {
+      budget--;
+      flashT = 26;
+      missed.push({ took: chosen.label, why: w.gate.noWhy });
+      setLesson("wrong", w.gate.module + " — “" + chosen.label + "”", w.gate.noWhy);
+    }
+    gateIndex++;
+    speed = Math.min(speed + 0.09, 4.3);
+    updateHud();
+
+    if (budget <= 0) { finish(false, "Budget gone."); return; }
+    if (gateIndex >= queue.length) { finish(true, "You flew the whole pathway."); return; }
+    walls.push(makeWall(queue[gateIndex], Math.max(W + 40, bird.x + 360)));
+  }
+
+  if (walls.length > 1 && walls[0].x + WALL_W < -240) walls.shift();
+}
+
+function crash(msg) {
+  budget--;
+  flashT = 26;
+  updateHud();
+  if (budget <= 0) { finish(false, msg); return; }
+  setLesson("wrong", "Crash — " + budget + " budget left", msg);
+  bird.y = H / 2;
+  bird.v = 0;
+  invuln = 72;
+  if (walls[0] && walls[0].x < W) walls[0].x = W + 40;
+}
+
+function finish(won, msg) {
+  state = "over";
+  if (score > best) {
+    best = score;
+    try { localStorage.setItem("flappy-product-best", String(best)); } catch (e) { /* private window */ }
+  }
+  updateHud();
+  ovTitle.textContent = won ? "You flew the whole pathway." : msg;
+  ovBody.textContent = "Cleared " + score + " of " + GATES.length + " gates" +
+    (missed.length ? ". The shortcuts you took:" : " — without a single shortcut.");
+  ovMissed.innerHTML = "";
+  ovMissed.hidden = missed.length === 0;
+  ovMissed.style.maxHeight = "38%";
+  missed.forEach(function (m) {
+    var d = document.createElement("div");
+    d.innerHTML = "<i>✗</i> <b></b> <span></span>";
+    d.querySelector("b").textContent = "“" + m.took + "”";
+    d.querySelector("span").textContent = "— " + m.why;
+    ovMissed.appendChild(d);
+  });
+  startBtn.textContent = "Fly again";
+  overlay.hidden = false;
+  startBtn.focus();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  ctx.strokeStyle = C.rule;
+  ctx.lineWidth = 1;
+  for (var y = 76; y < H; y += 76) {
+    ctx.beginPath();
+    ctx.moveTo(0, y + 0.5);
+    ctx.lineTo(W, y + 0.5);
+    ctx.stroke();
+  }
+
+  if (walls) for (var i = 0; i < walls.length; i++) drawWall(walls[i]);
+  if (bird) drawBird();
+
+  if (flashT > 0) {
+    ctx.fillStyle = C.accent;
+    ctx.globalAlpha = Math.min(flashT / 26, 1) * 0.15;
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+  }
+}
+
+function drawWall(w) {
+  var segs = [
+    [0, w.top.y - GAP_H / 2],
+    [w.top.y + GAP_H / 2, w.bot.y - GAP_H / 2],
+    [w.bot.y + GAP_H / 2, H]
+  ];
+  var i, s;
+  ctx.fillStyle = C.wall;
+  for (i = 0; i < segs.length; i++) {
+    s = segs[i];
+    if (s[1] > s[0]) ctx.fillRect(w.x, s[0], WALL_W, s[1] - s[0]);
+  }
+  ctx.strokeStyle = C.rule;
+  ctx.lineWidth = 1;
+  for (i = 0; i < segs.length; i++) {
+    s = segs[i];
+    if (s[1] > s[0]) ctx.strokeRect(w.x + 0.5, s[0] + 0.5, WALL_W - 1, s[1] - s[0] - 1);
+  }
+
+  ctx.textAlign = "right";
+  ctx.textBaseline = "middle";
+
+  ctx.font = '500 10px "IBM Plex Mono", monospace';
+  ctx.fillStyle = C.faint;
+  ctx.fillText(w.gate.module.toUpperCase(), w.x - 12, 18);
+
+  /* both options set identically: the words are the only tell */
+  ctx.font = '500 13px "IBM Plex Mono", monospace';
+  ctx.fillStyle = C.ink;
+  ctx.fillText(w.top.label, w.x - 12, w.top.y);
+  ctx.fillText(w.bot.label, w.x - 12, w.bot.y);
+}
+
+function drawBird() {
+  var tilt = Math.max(-0.5, Math.min(bird.v / 14, 0.85));
+  ctx.save();
+  ctx.translate(bird.x, bird.y);
+  ctx.rotate(tilt);
+  if (invuln > 0 && Math.floor(invuln / 7) % 2 === 0) ctx.globalAlpha = 0.35;
+  /* a paper plane: the smallest thing you can ship */
+  ctx.fillStyle = C.accent;
+  ctx.beginPath();
+  ctx.moveTo(15, 0);
+  ctx.lineTo(-11, -9);
+  ctx.lineTo(-6, 0);
+  ctx.lineTo(-11, 9);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = C.card;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.moveTo(14, 0);
+  ctx.lineTo(-6, 0);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function flap() {
+  if (state === "ready" || state === "over") { start(); return; }
+  bird.v = -7.1;
+}
+
+function start() {
+  reset();
+  setLesson("idle", "Gate 1 approaching", "Read both labels, pick the opening that reflects product thinking, and mind the ground.");
+  state = "flying";
+  overlay.hidden = true;
+  ovMissed.hidden = true;
+  bird.v = -6;
+}
+
+startBtn.addEventListener("click", function (e) { e.stopPropagation(); start(); });
+
+canvas.addEventListener("pointerdown", function (e) {
+  e.preventDefault();
+  if (state === "flying") flap();
+});
+
+document.addEventListener("keydown", function (e) {
+  if (e.code === "Space" || e.code === "ArrowUp" || e.key === "w") {
+    var tag = document.activeElement ? document.activeElement.tagName : "";
+    if (tag === "A" || (tag === "BUTTON" && !overlay.hidden)) return;
+    e.preventDefault();
+    flap();
+  }
+});
+
+window.addEventListener("blur", function () {
+  if (state === "flying") {
+    state = "over";
+    ovTitle.textContent = "Paused at gate " + Math.min(gateIndex + 1, GATES.length) + ".";
+    ovBody.textContent = "You cleared " + score + " so far. Starting again resets the run.";
+    ovMissed.hidden = true;
+    startBtn.textContent = "Restart the run";
+    overlay.hidden = false;
+  }
+});
+
+var mq = window.matchMedia("(prefers-color-scheme: dark)");
+if (mq.addEventListener) mq.addEventListener("change", function () { readColors(); draw(); });
+window.addEventListener("resize", resize);
+
+reset();
+resize();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
